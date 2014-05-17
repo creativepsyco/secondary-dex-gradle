@@ -27,7 +27,7 @@ The structure of this project is like this:
 
 We modify the `build.gradle` files to be able to churn out the Dex file for the secondary library
 
-Take a look at [build.gradle](app/build.gradle)
+Take a look at [app's build.gradle](app/build.gradle) and [lib's build.gradle](lib/build.gradle)
 
 We then use this and copy it into the assets folder which gets packaged into the final APK.
 
