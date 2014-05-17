@@ -1,0 +1,127 @@
+apply plugin: 'android'
+def log = project.logger
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.0.3"
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+
+    // Need to disable pre dexing to be able to build properly
+    // Otherwise we need to add more tasks to the libraries
+    // This is a small penalty to keep the house in order!
+    dexOptions {
+        incremental false
+        preDexLibraries = false
+        jumboMode = false
+    }
+
+    buildTypes {
+        // prevents dexing of lib classes
+        release {
+            runProguard false
+            debuggable false
+            zipAlign true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+android.applicationVariants.all { variant ->
+    def name = variant.buildType.name
+//    if (name.equals(com.android.builder.BuilderConstants.DEBUG)) {
+//        return; // Skip debug builds.
+//    }
+    log.info("========================================")
+    log.info("Starting Variant Build For the Application")
+    log.info("Variant Name: ${variant.name}")
+    log.info("Build Type Name: ${variant.buildType}")
+    log.info("Variant: ${variant}")
+    log.info("${variant.dex.libraries}")
+    log.info("========================================")
+
+    Task dexRelease = project.tasks.getByName("dex${name.capitalize()}")
+    log.info("Dex Task:\n=========== ${dexRelease.libraries}")
+
+    def libraryFiles = new ArrayList<?>()
+
+    variant.dex.libraries.each {
+        File file ->
+            if (!file.absolutePath.contains("SecondaryDexSample/lib/unspecified/classes.jar")) {
+                log.info("File Name ${file} Needs to be dexed")
+                libraryFiles.add(file);
+            }
+    }
+
+    variant.dex.libraries = libraryFiles
+    log.info("Libraries after modification: ${variant.dex.libraries}")
+
+    Task packageApp = project.tasks.getByName("package${name.capitalize()}")
+
+    def finalPackagedJars = new ArrayList<?>()
+    def libJars = new ArrayList<?>()
+
+    variant.packageApplication.packagedJars.each {
+        File file ->
+            if (!file.absolutePath.contains("SecondaryDexSample/lib/unspecified/classes.jar")) {
+                log.info("File Name ${file} Needs to be dexed")
+                finalPackagedJars.add(file);
+            } else {
+                libJars.add(file)
+            }
+    }
+    variant.packageApplication.packagedJars = finalPackagedJars
+
+    def mergeAssetTask = project.tasks.getByName("merge${name.capitalize()}Assets")
+    def copyJars = project.tasks.create("copy${name.capitalize()}Jar", Copy)
+    log.error("Copy Files List ${project.files(libJars)}" )
+    copyJars.from project.files(libJars)
+    copyJars.into "${buildDir}/assets/${name}"
+    copyJars.eachFile { details ->
+        log.error("Boom ${details.path}")
+    }
+
+    copyJars.dependsOn(mergeAssetTask)
+    log.error("Asset Directory: ${variant.processResources.assetsDir}")
+
+    project.tasks.withType(Compile) {
+        compileTask -> compileTask.dependsOn(copyJars)
+    }
+
+//    variant.packageApplication.dependsOn(copyJars)
+//    variant.processResources.dependsOn(copyJars)
+
+//    packageApp.dependsOn(copyJars)
+    log.error("${name.capitalize()} Package ${variant.packageApplication.packagedJars}")
+}
+
+/*
+ * Copyright (c) 2014 Mohit Kanwal.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ */
+//android.applicationVariants.each {
+//    variant ->
+//        variant.dex.libraries = variant.dex.libraries - files('/home/gardev/android/libs/SecondaryDexSample/app/build/exploded-aar/SecondaryDexSample/lib/unspecified/classes.jar')
+//        log.info("Dex Task After Removing Libs: ${variant.dex.libraries}")
+//}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:19.+'
+    compile project(':lib')
+}
+

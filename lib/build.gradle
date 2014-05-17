@@ -1,0 +1,84 @@
+/*
+ * Copyright (c) 2014 Mohit Kanwal.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ */
+
+import org.apache.tools.ant.taskdefs.condition.Os
+apply plugin: 'android-library'
+def log = project.logger
+
+// Dirty way to set the Build Tools Version
+// This way is probably okay, But reading it from somewhere is better
+String BUILD_TOOLS_VERSION = "19.0.3"
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion BUILD_TOOLS_VERSION
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+/**
+ * The Task Below uses the Dex Tool to create classes.dex file for the archive
+ * This dex file can be then be loaded at runtime to prevent the 64K Dalvik Method Limit
+ */
+import org.apache.tools.ant.taskdefs.condition.Os
+android.libraryVariants.all { variant ->
+    def name = variant.buildType.name
+
+//    if (name.equals(com.android.builder.BuilderConstants.DEBUG)) {
+//        return; // Skip debug builds.
+//    }
+
+    // Need to read the properties file for sdk location
+    // sdk.dir must be defined in the properties file
+    Properties props = new Properties()
+    props.load(new FileInputStream(project.rootProject.file("local.properties")))
+
+    log.info("========================================")
+    log.info("Starting Variant Build")
+    log.info("Variant Name: ${variant.name}")
+    log.info("Build Type Name: ${variant.buildType}")
+    log.info("Variant: ${variant}")
+    log.info("========================================")
+
+    String cmdExt = Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : ''
+    def task = project.tasks.create ("dex${name.capitalize()}", Exec)
+
+    /**
+     * This task currently only throws the class files to the dx tool
+     * But we can throw the dependencies of this library as well
+     */
+    task.dependsOn variant.javaCompile
+    task.commandLine "${props.get("sdk.dir")}/build-tools/${BUILD_TOOLS_VERSION}/dx${cmdExt}", '--dex',
+            "--output=${buildDir}/classes/${variant.name}/classes.dex",
+            "${buildDir}/classes/${variant.name}"
+
+    // Make sure we run our Dexing task before the packageReleaseJar Task
+    Task packageJar = project.tasks.getByName("package${name.capitalize()}Jar")
+    packageJar.dependsOn(task)
+}

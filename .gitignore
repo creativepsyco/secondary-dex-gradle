@@ -1,0 +1,41 @@
+.gradle
+/local.properties
+/.idea/workspace.xml
+.DS_Store
+
+#built application files
+*.apk
+*.ap_
+
+*.iml
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# My release Keys
+release/
+
+# generated files
+bin/
+gen/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Windows thumbnail db
+Thumbs.db
+
+# OSX files
+.DS_Store
+
+# Eclipse project files
+.classpath
+.project
+
+# Android Studio
+.idea
+#.idea/workspace.xml - remove # and delete .idea if it better suit your needs.
+.gradle
+build/
