@@ -13,13 +13,15 @@
  */
 package com.github.creativepsyco.secondarydex;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.github.creativepsyco.secondarydex.bigmodule.lib.MyLoader;
-import com.github.creativepsyco.secondarydex.plugin.SecondaryDex;
+import com.github.creativepsyco.secondarydex.bigmodule.lib.SecondActivity;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -32,6 +34,15 @@ public class MainActivity extends ActionBarActivity {
         // No need for runtime casts
         MyLoader loader = new MyLoader();
         loader.run();
+
+        // Lets load up the second activity also, which was defined in second Dex file
+        findViewById(R.id.btn_second).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 

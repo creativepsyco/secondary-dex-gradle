@@ -40,7 +40,12 @@ BUILD_TOOL_LOCATION=$4
 # Hard coded stuff for the Game
 PACKAGE=com/github/creativepsyco/secondarydex/bigmodule/lib
 
-## Google Play Services has 2 packages
+# Google Play Services has 2 packages
+# You can apply the same principle to deal with different libraries
+# This code assumes that you are doing a ProGuard step in Release.
+# Otherwise things will break,
+# You can very well change that after all, with some bash knowledge :)
+# I think I am just a tard bit lazy coz all of my dev environment is *NIX based :P
 #PACKAGE3=com/google/android/gms
 #PACKAGE4=com/google/ads
 
@@ -114,7 +119,6 @@ else
     "${BUILD_TOOL_LOCATION}/dx" --dex --output=${ASSET_DIR}  build/intermediates/exploded-aar/secondary-dex-gradle/lib/unspecified/classes.jar
 
     cd ${ASSET_DIR}
-#    rm game.zip
     zip -qrn *:: game.zip *.dex
     rm classes.dex
     cd "${CURRENT_DIR}"
@@ -125,6 +129,7 @@ else
 	else
 		LIB_NAME="app-${BUILD_TYPE}"
 	fi
+	rm -rf build/intermediates/libs/"${LIB_NAME}"
     unzip -q build/intermediates/libs/"${LIB_NAME}".ap_ -d build/intermediates/libs/"${LIB_NAME}"
     \cp ${ASSET_DIR}/game.zip build/intermediates/libs/"${LIB_NAME}"/assets/
     rm build/intermediates/libs/"${LIB_NAME}".ap_
