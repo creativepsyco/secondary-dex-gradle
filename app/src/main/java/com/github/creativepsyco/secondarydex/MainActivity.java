@@ -13,12 +13,13 @@
  */
 package com.github.creativepsyco.secondarydex;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.github.creativepsyco.secondarydex.plugin.DexLoader;
+import com.github.creativepsyco.secondarydex.bigmodule.lib.MyLoader;
+import com.github.creativepsyco.secondarydex.plugin.SecondaryDex;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -27,7 +28,10 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        DexLoader loader = new DexLoader(this);
+        // After the DEX is loaded we can simply access class like this:
+        // No need for runtime casts
+        MyLoader loader = new MyLoader();
+        loader.run();
     }
 
 

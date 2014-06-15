@@ -11,12 +11,14 @@
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
  */
+import com.android.build.gradle.tasks.Dex
+
 apply plugin: 'android'
 def log = project.logger
-
+def BUILD_TOOLS_VERSION = "19.1.0"
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    buildToolsVersion BUILD_TOOLS_VERSION
 
     defaultConfig {
         minSdkVersion 10
@@ -37,95 +39,69 @@ android {
     useOldManifestMerger true
 
     buildTypes {
-        // prevents dexing of lib classes
         release {
-            runProguard false
+            runProguard true
             debuggable false
             zipAlign true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
 }
+/**
+ * Relies on the Bash Script to manipulate the Dexing of the correct classes.
+ */
+afterEvaluate { project ->
+    android.applicationVariants.each {
+        variant ->
+            /**
+             * Alternative Approach to configuring the DEX task
+             * Instead of doing all the pains to run the proguard task properly, simply
+             *      1.Intercept the output move the "Package" to another directory.
+             *      2.Run DEX to generate a new DEX file for that package
+             *      3.Package the rest of the package files to generate the library stuff.
+             *      4.Load this in runtime.
+             */
+            Properties props = new Properties()
+            props.load(new FileInputStream(project.rootProject.file("local.properties")))
 
-android.applicationVariants.all { variant ->
-    def name = variant.buildType.name
-//    if (name.equals(com.android.builder.BuilderConstants.DEBUG)) {
-//        return; // Skip debug builds.
-//    }
-    log.info("========================================")
-    log.info("Starting Variant Build For the Application")
-    log.info("Variant Name: ${variant.name}")
-    log.info("Build Type Name: ${variant.buildType}")
-    log.info("Variant: ${variant}")
-    log.info("${variant.dex.libraries}")
-    log.info("========================================")
+            def packagingTask = project.tasks.create("customizeDexesFor${variant.name}", Exec)
+            packagingTask.commandLine 'bash', '.././package.sh',
+                    "${variant.flavorName}",
+                    "${variant.buildType.name}",
+                    "${variant.mergeAssets.outputDir}",
+                    "${props.get("sdk.dir")}/build-tools/${BUILD_TOOLS_VERSION}"
 
-    Task dexRelease = project.tasks.getByName("dex${name.capitalize()}")
-    log.info("Dex Task:\n=========== ${dexRelease.libraries}")
 
-    def libraryFiles = new ArrayList<?>()
-
-    /**
-     * This needs to be the name of your second module
-     * {@code lib/unspecified/classes.jar }
-     */
-    variant.dex.libraries.each {
-        File file ->
-            if (!file.absolutePath.contains("lib/unspecified/classes.jar")) {
-                log.info("File Name ${file} Needs to be dexed")
-                libraryFiles.add(file);
-            }
-    }
-
-    variant.dex.libraries = libraryFiles
-    log.info("Libraries after modification: ${variant.dex.libraries}")
-
-    Task packageApp = project.tasks.getByName("package${name.capitalize()}")
-
-    def finalPackagedJars = new ArrayList<?>()
-    def libJars = new ArrayList<?>()
-
-    variant.packageApplication.packagedJars.each {
-        File file ->
-            if (!file.absolutePath.contains("lib/unspecified/classes.jar")) {
-                log.info("File Name ${file} Needs to be dexed")
-                finalPackagedJars.add(file);
+            if (variant.name.contains("Release")) {
+                if (variant.variantData.obfuscationTask != null) {
+                    packagingTask.dependsOn variant.variantData.obfuscationTask
+                }
             } else {
-                libJars.add(file)
+                // For Debug simply remove the library from getting dex and create it
+                //----------------------- Extra Debug Step ----------------//
+                def libraryFiles = new ArrayList<?>()
+                def secondaryFile = new ArrayList<?>()
+
+                variant.dex.libraries.each {
+                    File file ->
+                        if (!file.absolutePath.contains("lib/unspecified/classes.jar")) {
+                            libraryFiles.add(file)
+                        } else {
+                            secondaryFile.add(file)
+                        }
+                }
+                variant.dex.libraries = libraryFiles
+                //----------------------- Extra Debug Step ----------------//
+
+                packagingTask.dependsOn variant.javaCompile
             }
+
+            // Finally Depend on Dex Task
+            String dexTaskName = "dex${variant.variantData.name.capitalize()}"
+            Dex dexTask = tasks.findByName(dexTaskName)
+            dexTask.dependsOn packagingTask
     }
-    variant.packageApplication.packagedJars = finalPackagedJars
-
-    def mergeAssetTask = project.tasks.getByName("merge${name.capitalize()}Assets")
-    def copyJars = project.tasks.create("copy${name.capitalize()}Jar", Copy)
-    log.error("Copy Files List ${project.files(libJars)}" )
-    copyJars.from project.files(libJars)
-    copyJars.into "${buildDir}/intermediates/assets/${name}"
-    copyJars.eachFile { details ->
-        log.error("Boom ${details.path}")
-    }
-
-    copyJars.dependsOn(mergeAssetTask)
-    log.error("Asset Directory: ${variant.processResources.assetsDir}")
-
-    project.tasks.withType(Compile) {
-        compileTask -> compileTask.dependsOn(copyJars)
-    }
-
-//    variant.packageApplication.dependsOn(copyJars)
-//    variant.processResources.dependsOn(copyJars)
-
-//    packageApp.dependsOn(copyJars)
-    log.error("${name.capitalize()} Package ${variant.packageApplication.packagedJars}")
 }
-
-
-//android.applicationVariants.each {
-//    variant ->
-//        variant.dex.libraries = variant.dex.libraries - files('/home/gardev/android/libs/SecondaryDexSample/app/build/exploded-aar/SecondaryDexSample/lib/unspecified/classes.jar')
-//        log.info("Dex Task After Removing Libs: ${variant.dex.libraries}")
-//}
-
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:19.+'
