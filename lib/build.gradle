@@ -18,7 +18,7 @@ def log = project.logger
 
 // Dirty way to set the Build Tools Version
 // This way is probably okay, But reading it from somewhere is better
-String BUILD_TOOLS_VERSION = "19.0.3"
+String BUILD_TOOLS_VERSION = "19.1.0"
 
 android {
     compileSdkVersion 19
@@ -36,7 +36,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    /**
+     * Need to set this to false to disable the merging of Build Config in case
+     * of shared package names (Since 0.10.0)
+     */
+    packageBuildConfig false
+    enforceUniquePackageName false
+    useOldManifestMerger true
 }
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -75,8 +83,8 @@ android.libraryVariants.all { variant ->
      */
     task.dependsOn variant.javaCompile
     task.commandLine "${props.get("sdk.dir")}/build-tools/${BUILD_TOOLS_VERSION}/dx${cmdExt}", '--dex',
-            "--output=${buildDir}/classes/${variant.name}/classes.dex",
-            "${buildDir}/classes/${variant.name}"
+            "--output=${buildDir}/intermediates/classes/${variant.name}/classes.dex",
+            "${buildDir}/intermediates/classes/${variant.name}"
 
     // Make sure we run our Dexing task before the packageReleaseJar Task
     Task packageJar = project.tasks.getByName("package${name.capitalize()}Jar")
