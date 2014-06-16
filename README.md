@@ -1,5 +1,6 @@
 secondary-dex-gradle
 ====================
+> To checkout a different version of loading the DEX files see branch `[method2](https://github.com/creativepsyco/secondary-dex-gradle/tree/method2)`
 
 This project aims to acheive custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
 
