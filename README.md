@@ -1,6 +1,6 @@
 secondary-dex-gradle
 ====================
-> To checkout a different version of loading the DEX files see branch `[method2](https://github.com/creativepsyco/secondary-dex-gradle/tree/method2)`
+> To checkout a different version of loading the DEX files see branch [`method2`][2]
 
 This project aims to acheive custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
 
@@ -37,4 +37,4 @@ Once this is done, loading the dex at runtime is easy, and is explained in the b
 A requirement is that both the library and the app will need to maintain a shared interface, otherwise the loading function will need to invoke methods at runtime via reflection.
 
 [1]: http://android-developers.blogspot.sg/2011/07/custom-class-loading-in-dalvik.html
-
+[2]: https://github.com/creativepsyco/secondary-dex-gradle/tree/method2
