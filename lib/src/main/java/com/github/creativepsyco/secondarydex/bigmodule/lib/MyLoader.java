@@ -15,7 +15,6 @@
 package com.github.creativepsyco.secondarydex.bigmodule.lib;
 
 import android.util.Log;
-import android.widget.Toast;
 
 /**
  * This must be an Implementation of an Interface which is shared

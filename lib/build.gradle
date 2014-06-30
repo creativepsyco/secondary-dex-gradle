@@ -12,7 +12,7 @@
  * substantial portions of the Software.
  */
 
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 def log = project.logger
 
 // Dirty way to set the Build Tools Version

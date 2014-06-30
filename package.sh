@@ -1,4 +1,5 @@
 #!/bin/bash
+#set -x
 # Copyright 2014 Mohit Singh Kanwal.
 #
 # Authors:
@@ -110,6 +111,7 @@ else
     # Cleanup
 #    Must cd to project dir
     CURRENT_DIR=$(pwd)
+    echo "Entering ${CURRENT_DIR}"
     cd ..
     echo "Performing Clean up"
     echo "Running the DEX Tool Now\n"
