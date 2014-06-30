@@ -121,6 +121,7 @@ else
     "${BUILD_TOOL_LOCATION}/dx" --dex --output=${ASSET_DIR}  build/intermediates/exploded-aar/secondary-dex-gradle/lib/unspecified/classes.jar
 
     cd ${ASSET_DIR}
+    rm game.zip
     zip -qrn *:: game.zip *.dex
     rm classes.dex
     cd "${CURRENT_DIR}"
