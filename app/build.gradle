@@ -13,7 +13,7 @@
  */
 import com.android.build.gradle.tasks.Dex
 
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 def log = project.logger
 def BUILD_TOOLS_VERSION = "19.1.0"
 android {
@@ -43,7 +43,8 @@ android {
             runProguard true
             debuggable false
             zipAlign true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles 'proguard-rules.txt'
+            signingConfig debug.signingConfig
         }
     }
 }
@@ -72,9 +73,13 @@ afterEvaluate { project ->
                     "${props.get("sdk.dir")}/build-tools/${BUILD_TOOLS_VERSION}"
 
 
-            if (variant.name.contains("Release")) {
+            println "[Dexing] debug: ${variant.name}"
+            if (variant.name.contains("release")) {
                 if (variant.variantData.obfuscationTask != null) {
+                    println "[Dexing] Adding Task to run after proguard"
                     packagingTask.dependsOn variant.variantData.obfuscationTask
+                } else {
+                    println "[Dexing] Obfuscation task is null ${variant.variantData}"
                 }
             } else {
                 // For Debug simply remove the library from getting dex and create it

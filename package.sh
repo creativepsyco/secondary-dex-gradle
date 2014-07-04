@@ -55,11 +55,19 @@ OUTPACKAGE=com/github/creativepsyco/secondarydex/bigmodule/lib # The Appliction 
 
 # The WORKDIR is the build area containing the classes
 # Usually build/classes/flavour-name/release[debug]
-WORKDIR=build/intermediates/classes/${FLAVOR}/${BUILD_TYPE}
-
+if [ "$FLAVOR" != "" ]; then
+    WORKDIR=build/intermediates/classes/${FLAVOR}/${BUILD_TYPE}
+else
+    WORKDIR=build/intermediates/classes/${BUILD_TYPE}
+fi
 
 if [ "$BUILD_TYPE" == "release" ]; then
-    WORKDIR=build/intermediates/classes-proguard/${FLAVOR}/${BUILD_TYPE}
+    CURRENT_DIR=$(pwd)
+    if [ "$FLAVOR" != "" ]; then
+        WORKDIR=build/intermediates/classes-proguard/${FLAVOR}/${BUILD_TYPE}
+    else
+        WORKDIR=build/intermediates/classes-proguard/${BUILD_TYPE}
+    fi
     # Cleanup
     echo "Performing Clean up"
     rm -rf ${WORKDIR}/${EX_DIR}
@@ -76,7 +84,7 @@ if [ "$BUILD_TYPE" == "release" ]; then
 # The Structure is very important otherwise the DEX Compiler Will complain
 # that the name of the class does not match its location wrt to the package
     echo "[DexPackage] Moving dependent classes into OUTPACKGE"
-    mv ${WORKDIR}/${EX_DIR}/${PACKAGE} ${WORKDIR}/OUTPACKAGE/${OUTPACKAGE}
+    mv ${WORKDIR}/${EX_DIR}/${PACKAGE}/* ${WORKDIR}/OUTPACKAGE/${OUTPACKAGE}/
 
 # We now remove the old classes.jar & create a new one in its place using the jar tool
     rm ${WORKDIR}/classes.jar
@@ -91,20 +99,29 @@ if [ "$BUILD_TYPE" == "release" ]; then
 # This is a special zip file, where there is no compression otherwise all assets cannot be
 # Natively Decoded. Dalvik sort of sucks. But we can cheat!
     echo "[DEXPackage] Unzipping Files in the Asset Dir"
-    rm -rf build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}
-    unzip -q build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}.ap_ -d build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}
+    if [ "$FLAVOR" != "" ]; then
+		LIB_NAME="app-${FLAVOR}-${BUILD_TYPE}"
+	else
+		LIB_NAME="app-${BUILD_TYPE}"
+	fi
+
+    rm -rf build/intermediates/libs/${LIB_NAME}
+    unzip -q build/intermediates/libs/${LIB_NAME}.ap_ -d build/intermediates/libs/${LIB_NAME}
     cd ${ASSET_DIR}
     rm game.zip
     zip -qrn *:: game.zip *.dex
     rm classes.dex
     cd -
-    \cp -fr ${ASSET_DIR}/game.zip build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}/assets/
-    rm build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}.ap_
-    cd build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}
-    zip -qrn *:: ../app-${FLAVOR}-${BUILD_TYPE}.ap_ *
-    rm -rf build/intermediates/libs/app-${FLAVOR}-${BUILD_TYPE}
-    cd -
+    mkdir -p build/intermediates/libs/${LIB_NAME}/assets/
+    \cp -fr ${ASSET_DIR}/game.zip build/intermediates/libs/${LIB_NAME}/assets/
+    rm build/intermediates/libs/${LIB_NAME}.ap_
+    cd build/intermediates/libs/${LIB_NAME}
+    zip -qrn *:: ../${LIB_NAME}.ap_ *
+    cd ${CURRENT_DIR}
+    rm -rf build/intermediates/libs/${LIB_NAME}
 #    And we are done
+    rm -rf ${WORKDIR}/OUTPACKAGE
+    rm -rf ${WORKDIR}/${EX_DIR}
     echo "[DexPackage] Done generating Dexes & Assets"
 else
     # Debug Mode
@@ -127,13 +144,18 @@ else
     cd "${CURRENT_DIR}"
 
 # Copy over to the archive
+    echo "[Dexing] Flavor is ${FLAVOR}"
 	if [ "$FLAVOR" != "" ]; then
 		LIB_NAME="app-${FLAVOR}-${BUILD_TYPE}"
 	else
 		LIB_NAME="app-${BUILD_TYPE}"
 	fi
+    echo "[Dexing] Lib name is $LIB_NAME"
+
 	rm -rf build/intermediates/libs/"${LIB_NAME}"
     unzip -q build/intermediates/libs/"${LIB_NAME}".ap_ -d build/intermediates/libs/"${LIB_NAME}"
+    # Make an asset dir if it does not exist
+    mkdir -p "build/intermediates/libs/"${LIB_NAME}"/assets/"
     \cp ${ASSET_DIR}/game.zip build/intermediates/libs/"${LIB_NAME}"/assets/
     rm build/intermediates/libs/"${LIB_NAME}".ap_
     cd build/intermediates/libs/"${LIB_NAME}"
