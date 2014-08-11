@@ -1,9 +1,9 @@
 secondary-dex-gradle
 ====================
-[ ![Codeship Status for creativepsyco/secondary-dex-gradle](https://www.codeship.io/projects/6a9c2100-f318-0131-3c3a-7e98aa4e2896/status)](https://www.codeship.io/projects/27799)
-
-> To checkout a different version of loading the DEX files see branch [`method2`][2]
-
+<!-- [ ![Codeship Status for creativepsyco/secondary-dex-gradle](https://www.codeship.io/projects/6a9c2100-f318-0131-3c3a-7e98aa4e2896/status)](https://www.codeship.io/projects/27799)
+ -->
+<!-- > To checkout a different version of loading the DEX files see branch [`method2`][2]
+ -->
 This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
 
 How to run
