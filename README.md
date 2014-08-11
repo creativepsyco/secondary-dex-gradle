@@ -2,7 +2,7 @@ secondary-dex-gradle
 ====================
 > To checkout a different version of loading the DEX files see branch [`method2`][2]
 
-This project aims to acheive custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
+This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
 
 How to run
 ----------
@@ -26,9 +26,9 @@ The structure of this project is like this:
 |-- lib (The secondary Dex Library)
 ```
 
-We modify the `build.gradle` files to be able to churn out the Dex file for the secondary library
+We modify the `build.gradle` files to be able to churn out the Dex file for the secondary library.
 
-Take a look at [app's build.gradle](app/build.gradle) and [lib's build.gradle](lib/build.gradle)
+Take a look at [app's build.gradle](app/build.gradle) and [lib's build.gradle](lib/build.gradle).
 
 We then use this and copy it into the assets folder which gets packaged into the final APK.
 
