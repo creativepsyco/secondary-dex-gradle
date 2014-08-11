@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright (c) 2014 Mohit Kanwal.
   ~
@@ -10,8 +11,12 @@
   ~
   ~ The above copyright notice and this permission notice shall be included in all copies or
   ~ substantial portions of the Software.
-  -->
-
+-->
 <resources>
+
     <string name="app_name">BigModule</string>
+    <string name="title_activity_second">SecondActivity</string>
+    <string name="hello_world">Hello world! From the second Activity. Not part of the main Dex File :)</string>
+    <string name="action_settings">Settings</string>
+
 </resources>

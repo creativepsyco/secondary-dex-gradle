@@ -23,8 +23,20 @@
     tools:context="com.github.creativepsyco.secondarydex.MainActivity">
 
     <TextView
+        android:id="@+id/main_text"
         android:text="@string/hello_world"
+        android:layout_centerHorizontal="true"
+        android:textSize="@dimen/abc_action_bar_default_height"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <Button
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/main_text"
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
+        android:id="@+id/btn_second"
+        android:text="Go To Second Activity"
+        android:layout_height="wrap_content"/>
 
 </RelativeLayout>
