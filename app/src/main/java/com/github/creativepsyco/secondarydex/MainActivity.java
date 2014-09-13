@@ -22,6 +22,7 @@ import android.view.View;
 
 import com.github.creativepsyco.secondarydex.bigmodule.lib.MyLoader;
 import com.github.creativepsyco.secondarydex.bigmodule.lib.SecondActivity;
+import com.google.common.base.Strings;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -32,6 +33,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         // After the DEX is loaded we can simply access class like this:
         // No need for runtime casts
+        Strings.isNullOrEmpty("");
         MyLoader loader = new MyLoader();
         loader.run();
 

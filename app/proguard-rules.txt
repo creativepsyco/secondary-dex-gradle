@@ -120,3 +120,5 @@
 #    java.lang.Object writeReplace();
 #    java.lang.Object readResolve();
 #}
+
+-dontwarn com.google.common.**
