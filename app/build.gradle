@@ -63,10 +63,9 @@ afterEvaluate { project ->
             String FLAVOR = "${variant.flavorName}"
             String BUILD_TYPE = "${variant.buildType.name}"
             String ASSET_DIR = "${variant.mergeAssets.outputDir}"
-            String BUILD_TOOL_DX = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}/dx" + OperatingSystem.current().windows?".bat":""
-
+            String DEX = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}/dx"
+            String BUILD_TOOL_DX = OperatingSystem.current().windows?"${DEX}.bat":"${DEX}"
             String EX_DIR = "classes"
-
 
             String LIB_NAME = ""
             if ("$FLAVOR" != "")
