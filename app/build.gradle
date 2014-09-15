@@ -11,7 +11,7 @@
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
  */
-import com.android.build.gradle.tasks.Dex
+import org.gradle.internal.os.OperatingSystem
 
 apply plugin: 'com.android.application'
 def BUILD_TOOLS_VERSION = "19.1.0"
@@ -63,7 +63,7 @@ afterEvaluate { project ->
             String FLAVOR = "${variant.flavorName}"
             String BUILD_TYPE = "${variant.buildType.name}"
             String ASSET_DIR = "${variant.mergeAssets.outputDir}"
-            String BUILD_TOOL_LOCATION = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}"            
+            String BUILD_TOOL_DX = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}/dx" + OperatingSystem.current().windows?".bat":""
 
             String EX_DIR = "classes"
 
@@ -125,7 +125,7 @@ afterEvaluate { project ->
                     }.execute()
 
                     task("dexLibraries", type: Exec) {
-                        commandLine "${BUILD_TOOL_LOCATION}/dx", "--dex", "--output=${ASSET_DIR}", "${WORKDIR}/OUTPACKAGE"
+                        commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", "${WORKDIR}/OUTPACKAGE"
                     }.execute()
                 }
 
@@ -145,7 +145,7 @@ afterEvaluate { project ->
 
                 variant.dex.libraries.each {
                     File file ->
-                        if (!file.absolutePath.contains("lib/unspecified/classes.jar") && !file.absolutePath.contains("guava") ) {
+                        if (!file.absolutePath.contains("lib${File.separator}unspecified${File.separator}classes.jar") && !file.absolutePath.contains("guava") ) {
                             libraryFiles.add(file)
                         } else {
                             secondaryFile.add(file)
@@ -156,7 +156,7 @@ afterEvaluate { project ->
 
                 task("$taskDexSplit") << {
                     task("dexLibraries", type: Exec) {
-                            commandLine "${BUILD_TOOL_LOCATION}/dx", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
+                            commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
                     }.execute()
                 }
 
