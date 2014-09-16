@@ -11,10 +11,9 @@
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
  */
-import com.android.build.gradle.tasks.Dex
+import org.gradle.internal.os.OperatingSystem
 
 apply plugin: 'com.android.application'
-def log = project.logger
 def BUILD_TOOLS_VERSION = "19.1.0"
 android {
     compileSdkVersion 19
@@ -54,34 +53,90 @@ android {
 afterEvaluate { project ->
     android.applicationVariants.each {
         variant ->
-            /**
-             * Alternative Approach to configuring the DEX task
-             * Instead of doing all the pains to run the proguard task properly, simply
-             *      1.Intercept the output move the "Package" to another directory.
-             *      2.Run DEX to generate a new DEX file for that package
-             *      3.Package the rest of the package files to generate the library stuff.
-             *      4.Load this in runtime.
-             */
-            Properties props = new Properties()
-            props.load(new FileInputStream(project.rootProject.file("local.properties")))
+            String SDK_DIR = "$System.env.ANDROID_HOME"
+            if("${SDK_DIR}" == "") {
+                Properties props = new Properties()
+                props.load(new FileInputStream(project.rootProject.file("local.properties")))
+                SDK_DIR = props.get('sdk.dir');
+            } 
 
-            def packagingTask = project.tasks.create("customizeDexesFor${variant.name}", Exec)
-            packagingTask.commandLine 'bash', '.././package.sh',
-                    "${variant.flavorName}",
-                    "${variant.buildType.name}",
-                    "${variant.mergeAssets.outputDir}",
-                    "${props.get("sdk.dir")}/build-tools/${BUILD_TOOLS_VERSION}"
+            String FLAVOR = "${variant.flavorName}"
+            String BUILD_TYPE = "${variant.buildType.name}"
+            String ASSET_DIR = "${variant.mergeAssets.outputDir}"
+            String DEX = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}/dx"
+            String BUILD_TOOL_DX = OperatingSystem.current().windows?"${DEX}.bat":"${DEX}"
+            String EX_DIR = "classes"
 
+            String LIB_NAME = ""
+            if ("$FLAVOR" != "")
+                LIB_NAME = "app-${FLAVOR}-${BUILD_TYPE}"
+            else
+                LIB_NAME = "app-${BUILD_TYPE}"
 
-            println "[Dexing] debug: ${variant.name}"
+            String taskDexSplit = "dex${variant.name.capitalize()}Split"
+            String taskDexSplit2 = taskDexSplit + "2"
+
             if (variant.name.contains("release")) {
+
+                task("$taskDexSplit") << {
+
+                    String WORKDIR
+                    if ( "$FLAVOR" != "" )
+                        WORKDIR="build/intermediates/classes-proguard/${FLAVOR}/${BUILD_TYPE}"
+                    else
+                        WORKDIR="build/intermediates/classes-proguard/${BUILD_TYPE}"
+
+                    task("unzipAndDeleteClassesJar", type: Copy) {
+                        def zipFile = file("${WORKDIR}/classes.jar")
+                        def outputDir = file("${WORKDIR}/${EX_DIR}")
+                        from zipTree(zipFile)
+                        into outputDir
+                        doFirst {
+                            outputDir.deleteDir()
+                        }
+                        doLast {
+                            zipFile.delete()
+                        }
+                    }.execute()
+
+                    task("extractLibraryClasses", type: Copy) {
+                        String PACKAGE = "com/github/creativepsyco/secondarydex/bigmodule/lib"
+                        def source = file("${WORKDIR}/${EX_DIR}/${PACKAGE}/")
+                        from source
+                        into file("${WORKDIR}/OUTPACKAGE/${PACKAGE}/")
+                        doLast {
+                            source.deleteDir()
+                        }
+                    }.execute()
+
+                    task("extractGuavaLibrary", type: Copy) {
+                        String PACKAGE = "com/google"
+                        def source = file("${WORKDIR}/${EX_DIR}/${PACKAGE}/")
+                        from source
+                        into file("${WORKDIR}/OUTPACKAGE/${PACKAGE}/")
+                        doLast {
+                            source.deleteDir()
+                        }
+                    }.execute()
+
+                    task("rebuildClassesJar", type: Exec) {
+                        commandLine "jar", "cvf", "${WORKDIR}/classes.jar", "-C", "${WORKDIR}/${EX_DIR}/", "."
+                    }.execute()
+
+                    task("dexLibraries", type: Exec) {
+                        commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", "${WORKDIR}/OUTPACKAGE"
+                    }.execute()
+                }
+
                 if (variant.variantData.obfuscationTask != null) {
                     println "[Dexing] Adding Task to run after proguard"
-                    packagingTask.dependsOn variant.variantData.obfuscationTask
+                    tasks.findByName(taskDexSplit).dependsOn variant.variantData.obfuscationTask
                 } else {
                     println "[Dexing] Obfuscation task is null ${variant.variantData}"
                 }
+
             } else {
+
                 // For Debug simply remove the library from getting dex and create it
                 //----------------------- Extra Debug Step ----------------//
                 def libraryFiles = new ArrayList<?>()
@@ -89,7 +144,7 @@ afterEvaluate { project ->
 
                 variant.dex.libraries.each {
                     File file ->
-                        if (!file.absolutePath.contains("lib/unspecified/classes.jar")) {
+                        if (!file.absolutePath.contains("lib${File.separator}unspecified${File.separator}classes.jar") && !file.absolutePath.contains("guava") ) {
                             libraryFiles.add(file)
                         } else {
                             secondaryFile.add(file)
@@ -98,18 +153,80 @@ afterEvaluate { project ->
                 variant.dex.libraries = libraryFiles
                 //----------------------- Extra Debug Step ----------------//
 
-                packagingTask.dependsOn variant.javaCompile
+                task("$taskDexSplit") << {
+                    task("dexLibraries", type: Exec) {
+                            commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
+                    }.execute()
+                }
+
+                tasks.findByName(taskDexSplit).dependsOn variant.javaCompile
             }
+
+            task("$taskDexSplit2") << {
+
+                task("zipDexedLibraries", type: Zip) {
+                    destinationDir new File("${ASSET_DIR}")
+                    archiveName 'game.zip'
+                    from "${ASSET_DIR}"
+                    include '*.dex'
+                    doLast {
+                        file("${ASSET_DIR}/classes.dex").delete()
+                    }
+                }.execute()
+
+                task("unzipAndDeleteAppContainer", type: Copy) {
+                    def zipFile = file("build/intermediates/libs/${LIB_NAME}.ap_")
+                    def outputDir = file("build/intermediates/libs/${LIB_NAME}")
+                    from zipTree(zipFile)
+                    into outputDir
+                    doFirst {
+                        outputDir.deleteDir()
+                    }
+                    doLast {
+                        zipFile.delete()
+                    }
+                }.execute()
+
+                task("copyDexedLibrariesToApp", type: Copy) {
+                    from "${ASSET_DIR}/game.zip"
+                    into "build/intermediates/libs/${LIB_NAME}/assets/"
+                }.execute()
+
+                task("recreateApp", type: Zip) {
+                    destinationDir file("build/intermediates/libs")
+                    archiveName "${LIB_NAME}.ap_"
+                    from "build/intermediates/libs/${LIB_NAME}"
+                    include '**/*'
+                    doLast {
+                        file("build/intermediates/libs/${LIB_NAME}").deleteDir()
+                        file("build/tmp").deleteDir()
+                    }
+                }.execute()
+            }
+/*
+            tasks.findByName(taskDexSplit).onlyIf(new Spec<Task>() {
+                boolean isSatisfiedBy(Task task) {
+                    return task.dependsOnTaskDidWork();
+                }
+            })
+
+            tasks.findByName(taskDexSplit2).onlyIf(new Spec<Task>() {
+                boolean isSatisfiedBy(Task task) {
+                    return task.dependsOnTaskDidWork();
+                }
+            })
+*/
 
             // Finally Depend on Dex Task
             String dexTaskName = "dex${variant.variantData.name.capitalize()}"
-            Dex dexTask = tasks.findByName(dexTaskName)
-            dexTask.dependsOn packagingTask
+            Task dexTask = tasks.findByName(dexTaskName)
+            dexTask.dependsOn taskDexSplit2
+            tasks.findByName(taskDexSplit2).dependsOn taskDexSplit
     }
 }
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:19.+'
     compile project(':lib')
+    compile 'com.google.guava:guava:18.0'
 }
-
