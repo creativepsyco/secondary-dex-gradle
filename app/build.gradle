@@ -53,18 +53,17 @@ android {
 afterEvaluate { project ->
     android.applicationVariants.each {
         variant ->
-            String SDK_DIR = "$System.env.ANDROID_HOME"
-            if("${SDK_DIR}" == "") {
+            String SDK_DIR = System.getenv("ANDROID_HOME")
+            if(SDK_DIR == null) {
                 Properties props = new Properties()
                 props.load(new FileInputStream(project.rootProject.file("local.properties")))
                 SDK_DIR = props.get('sdk.dir');
-            } 
-
+            }
             String FLAVOR = "${variant.flavorName}"
             String BUILD_TYPE = "${variant.buildType.name}"
             String ASSET_DIR = "${variant.mergeAssets.outputDir}"
             String DEX = "${SDK_DIR}/build-tools/${BUILD_TOOLS_VERSION}/dx"
-            String BUILD_TOOL_DX = OperatingSystem.current().windows?"${DEX}.bat":"${DEX}"
+            String BUILD_TOOL_DX = OperatingSystem.current().windows ? "${DEX}.bat" : "${DEX}"
             String EX_DIR = "classes"
 
             String LIB_NAME = ""
@@ -81,10 +80,10 @@ afterEvaluate { project ->
                 task("$taskDexSplit") << {
 
                     String WORKDIR
-                    if ( "$FLAVOR" != "" )
-                        WORKDIR="build/intermediates/classes-proguard/${FLAVOR}/${BUILD_TYPE}"
+                    if ("$FLAVOR" != "")
+                        WORKDIR = "build/intermediates/classes-proguard/${FLAVOR}/${BUILD_TYPE}"
                     else
-                        WORKDIR="build/intermediates/classes-proguard/${BUILD_TYPE}"
+                        WORKDIR = "build/intermediates/classes-proguard/${BUILD_TYPE}"
 
                     task("unzipAndDeleteClassesJar", type: Copy) {
                         def zipFile = file("${WORKDIR}/classes.jar")
@@ -144,7 +143,8 @@ afterEvaluate { project ->
 
                 variant.dex.libraries.each {
                     File file ->
-                        if (!file.absolutePath.contains("lib${File.separator}unspecified${File.separator}classes.jar") && !file.absolutePath.contains("guava") ) {
+                        if (!file.absolutePath.contains("lib${File.separator}unspecified${File.separator}classes.jar")
+                                && !file.absolutePath.contains("guava")) {
                             libraryFiles.add(file)
                         } else {
                             secondaryFile.add(file)
@@ -155,7 +155,7 @@ afterEvaluate { project ->
 
                 task("$taskDexSplit") << {
                     task("dexLibraries", type: Exec) {
-                            commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
+                        commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
                     }.execute()
                 }
 
