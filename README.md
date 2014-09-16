@@ -1,10 +1,6 @@
 secondary-dex-gradle
 ====================
-<!-- [ ![Codeship Status for creativepsyco/secondary-dex-gradle](https://www.codeship.io/projects/6a9c2100-f318-0131-3c3a-7e98aa4e2896/status)](https://www.codeship.io/projects/27799)
- -->
-<!-- > To checkout a different version of loading the DEX files see branch [`method2`][2]
- -->
-This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]
+This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]. This project tackles the DEX limit which is 65536 methods limited to a single DEX file.
 
 How to run
 ----------
@@ -27,7 +23,7 @@ Shortcomings of the previous method:
 * You cannot load Activities, and you must dynamically cast all interfaces at runtime to achieve what you want to go.
 * This makes your app highly dependent on the secondary DEX generation method which might be a bit risky.
 
-For these reasons, I thought of using simple Bash scripting to achieve what i want to do. Simply put:
+For these reasons, I thought of using simple Bash scripting to achieve what I want to do. Simply put:
 
 * Be able to plugin the secondary dex mechanism when I want and be able to turn it off. This makes development simple devoid of any potential errors
 * Be able to do Proguard on the entire app, including secondary DEXes.
@@ -36,7 +32,7 @@ For these reasons, I thought of using simple Bash scripting to achieve what i wa
 
 Its a very **hackish** solution, but I think it works fine, and does not incur any high penalty, I was able to reduce the Main DEX file size of one of the apps I work on to `4.5 MB` from `7.1 MB` and it worked on Gingerbread devices with a breeze (At least guaranteed to run on 99% of the gingerbread devices). Some of the devices have a weird way of managing filesystems, and sometimes loading DEX files fails and I am yet to find out why. But anyways, this is a pluggable and battle-tested solution.
 
-I am no gradle expert so I churned out a bash script to do this. Would love to get a pull-request with a gradle based solution :)
+Thanks to @nenick for providing windows support and porting the bash script to a gradle task.
 
 Overview of Multiple Dexing methods
 -----------------------------------
