@@ -75,7 +75,7 @@ afterEvaluate { project ->
             String taskDexSplit = "dex${variant.name.capitalize()}Split"
             String taskDexSplit2 = taskDexSplit + "2"
 
-            if (variant.name.contains("release")) {
+            if (variant.buildType.runProguard) {
 
                 task("$taskDexSplit") << {
 
