@@ -11,6 +11,8 @@
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
  */
+
+import com.android.server.wm.Task
 import org.gradle.internal.os.OperatingSystem
 
 apply plugin: 'com.android.application'

@@ -1,5 +1,13 @@
 secondary-dex-gradle
 ====================
+#UPDATE
+Since Google has officially released a comprehensive mechanism to [Build Apps with more than 65,000 methods](http://developer.android.com/tools/building/multidex.html), this project is no longer going to be maintained.
+
+Please refer to the official Google Docs on this issue.
+
+-------
+
+
 This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]. This project tackles the DEX limit which is 65536 methods limited to a single DEX file.
 
 How to run
