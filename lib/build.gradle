@@ -41,7 +41,6 @@ android {
      */
     packageBuildConfig false
     enforceUniquePackageName false
-    useOldManifestMerger true
 }
 
 

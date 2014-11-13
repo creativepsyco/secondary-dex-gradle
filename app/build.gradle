@@ -12,7 +12,6 @@
  * substantial portions of the Software.
  */
 
-import com.android.server.wm.Task
 import org.gradle.internal.os.OperatingSystem
 
 apply plugin: 'com.android.application'
@@ -37,7 +36,6 @@ android {
         jumboMode = false
     }
     enforceUniquePackageName false
-    useOldManifestMerger true
 
     buildTypes {
         release {
@@ -77,7 +75,7 @@ afterEvaluate { project ->
             String taskDexSplit = "dex${variant.name.capitalize()}Split"
             String taskDexSplit2 = taskDexSplit + "2"
 
-            if (variant.buildType.runProguard) {
+            if (variant.buildType.minifyEnabled) {
 
                 task("$taskDexSplit") << {
 
