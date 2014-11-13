@@ -155,8 +155,16 @@ afterEvaluate { project ->
                 //----------------------- Extra Debug Step ----------------//
 
                 task("$taskDexSplit") << {
+                    def arguments = new ArrayList<?>()
+                    arguments.add("--dex")
+                    arguments.add("--output=${ASSET_DIR}")
+                    arguments.addAll(secondaryFile)
+
                     task("dexLibraries", type: Exec) {
-                        commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}", secondaryFile.get(0).toString(), secondaryFile.get(1).toString()
+                        executable "${BUILD_TOOL_DX}"
+                        args arguments
+//                        commandLine "${BUILD_TOOL_DX}", "--dex", "--output=${ASSET_DIR}"
+//                        commandLine.addAll(secondaryFile)
                     }.execute()
                 }
 
