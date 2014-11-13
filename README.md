@@ -7,6 +7,7 @@ Please refer to the official Google Docs on this issue.
 
 -------
 
+[![Circle CI](https://circleci.com/gh/creativepsyco/secondary-dex-gradle.png?style=badge)](https://circleci.com/gh/creativepsyco/secondary-dex-gradle)
 
 This project aims to achieve custom class loading in Dalvik as was outlined in the [Android Developers Blogpost][1]. This project tackles the DEX limit which is 65536 methods limited to a single DEX file.
 
