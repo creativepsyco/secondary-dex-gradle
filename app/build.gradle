@@ -40,6 +40,7 @@ android {
     buildTypes {
         release {
             runProguard true
+            minifyEnabled true
             debuggable false
             zipAlign true
             proguardFiles 'proguard-rules.txt'
@@ -54,7 +55,7 @@ afterEvaluate { project ->
     android.applicationVariants.each {
         variant ->
             String SDK_DIR = System.getenv("ANDROID_HOME")
-            if(SDK_DIR == null) {
+            if (SDK_DIR == null) {
                 Properties props = new Properties()
                 props.load(new FileInputStream(project.rootProject.file("local.properties")))
                 SDK_DIR = props.get('sdk.dir');
@@ -174,33 +175,10 @@ afterEvaluate { project ->
                     }
                 }.execute()
 
-                task("unzipAndDeleteAppContainer", type: Copy) {
-                    def zipFile = file("build/intermediates/libs/${LIB_NAME}.ap_")
-                    def outputDir = file("build/intermediates/libs/${LIB_NAME}")
-                    from zipTree(zipFile)
-                    into outputDir
-                    doFirst {
-                        outputDir.deleteDir()
-                    }
-                    doLast {
-                        zipFile.delete()
-                    }
-                }.execute()
 
                 task("copyDexedLibrariesToApp", type: Copy) {
                     from "${ASSET_DIR}/game.zip"
                     into "build/intermediates/libs/${LIB_NAME}/assets/"
-                }.execute()
-
-                task("recreateApp", type: Zip) {
-                    destinationDir file("build/intermediates/libs")
-                    archiveName "${LIB_NAME}.ap_"
-                    from "build/intermediates/libs/${LIB_NAME}"
-                    include '**/*'
-                    doLast {
-                        file("build/intermediates/libs/${LIB_NAME}").deleteDir()
-                        file("build/tmp").deleteDir()
-                    }
                 }.execute()
             }
 /*
