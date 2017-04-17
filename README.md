@@ -1,6 +1,6 @@
 secondary-dex-gradle
 ====================
-#UPDATE
+# UPDATE
 Since Google has officially released a comprehensive mechanism to [Build Apps with more than 65,000 methods](http://developer.android.com/tools/building/multidex.html), this project is no longer going to be maintained.
 
 Please refer to the official Google Docs on this issue.
