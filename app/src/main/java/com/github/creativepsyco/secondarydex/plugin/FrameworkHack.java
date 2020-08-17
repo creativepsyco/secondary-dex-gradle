@@ -18,6 +18,7 @@ package com.github.creativepsyco.secondarydex.plugin;
 
 
 import android.util.Log;
+import android.os.Build;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -25,6 +26,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.ZipFile;
 
 import dalvik.system.DexFile;
@@ -137,7 +139,10 @@ public class FrameworkHack {
         System.arraycopy(objOrgDexElements, 0, newDexElemArray, 0, orgDexCount);
         Method mMakeDexElements = null;
         if (kitkatPlus) {
-            mMakeDexElements =
+            //mMakeDexElements =
+            //    dplClass.getDeclaredMethod("makeDexElements", ArrayList.class, File.class, ArrayList.class);
+            mMakeDexElements = Build.VERSION.SDK_INT >= 23 ?
+                dplClass.getDeclaredMethod("makePathElements", List.class, File.class, List.class) :
                 dplClass.getDeclaredMethod("makeDexElements", ArrayList.class, File.class, ArrayList.class);
         } else {
             mMakeDexElements = dplClass.getDeclaredMethod("makeDexElements", ArrayList.class, File.class);
